@@ -1,0 +1,31 @@
+{
+  "name": "china-regional-data",
+  "version": "1.0.1",
+  "description": "中国省、市、区、街道数据",
+  "main": "index.js",
+  "scripts": {
+    "fetch": "npm run fetch"
+  },
+  "keywords": [
+    "中国省份",
+    "行政区域",
+    "城市",
+    "省市区",
+    "省市区街道"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.3",
+    "fs-extra": "^10.0.0",
+    "iconv-lite": "^0.6.3",
+    "v-axios": "^3.0.6"
+  },
+  "devDependencies": {
+    "eslint": "^7.29.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0"
+  }
+}
