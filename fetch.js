@@ -6,6 +6,8 @@ const fs = require('fs-extra')
 async function getPage (url) {
   const res = await axios.get(url, {
     responseType: 'stream'
+  }).catch(e => {
+    console.error(e)
   })
 
   const html = await new Promise((resolve) => {
@@ -46,8 +48,6 @@ async function getPage (url) {
     urls.push(url)
   })
 
-  console.log(list)
-
   // 市
   for (const url of urls) {
     const level1 = await getPage(url)
@@ -65,11 +65,14 @@ async function getPage (url) {
         }
 
         const parentId = data.id.slice(0, 2) + '0000'
-        if (!rs[parentId]) {
-          rs[parentId] = {}
+
+        if (data.name !== '市辖区') {
+          if (!rs[parentId]) {
+            rs[parentId] = {}
+          }
+          cityIds.push(data.id)
+          rs[parentId][data.id] = data.name
         }
-        cityIds.push(data.id)
-        rs[parentId][data.id] = data.name
       }
       countyUrls.push(url)
     })
@@ -78,6 +81,8 @@ async function getPage (url) {
       const level2 = await getPage(url)
       const $ = cheerio.load(level2, { decodeEntities: false })
       const list = $('.countytr td, .towntr td')
+
+      const districtUrls = []
       list.each(async (index, el) => {
         const link = $(el).find('a')
         let data = {}
@@ -101,12 +106,55 @@ async function getPage (url) {
 
         if (data.id) {
           const parentId = data.id.slice(0, 4) + '00'
-          if (!rs[parentId]) {
-            rs[parentId] = {}
+
+          if (data.name !== '市辖区') {
+            if (!rs[parentId]) {
+              rs[parentId] = {}
+            }
+            rs[parentId][data.id] = data.name
+
+            const tmpUrl = url.split(parentId.slice(0, 4) + '.html')[0]
+            const href = $(link).attr('href')
+            const url_ = href ? (tmpUrl + `${$(link).attr('href')}`) : ''
+            console.log(url_)
+
+            if (!districtUrls.includes(url_) && url_) {
+              districtUrls.push(url_)
+            }
           }
-          rs[parentId][data.id] = data.name
         }
       })
+
+      for (const url of districtUrls) {
+        const level2 = await getPage(url)
+        const $ = cheerio.load(level2, { decodeEntities: false })
+
+        const list = $('table .towntable .towntr')
+
+        list.each(async (index, el) => {
+          const tdList = $(el).find('td')
+          const data = {}
+
+          tdList.each(async (index, el) => {
+            if (index === 0) {
+              data.id = $(el).text()
+            } else {
+              data.name = $(el).text()
+            }
+          })
+
+          if (data.id) {
+            const parentId = data.id.slice(0, 6)
+
+            if (data.name !== '市辖区') {
+              if (!rs[parentId]) {
+                rs[parentId] = {}
+              }
+              rs[parentId][data.id] = data.name
+            }
+          }
+        })
+      }
     }
   }
 
